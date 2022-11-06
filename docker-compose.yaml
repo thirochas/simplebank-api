@@ -1,0 +1,27 @@
+version: "3.9"
+services:
+  postgres:
+    image: postgres:12-alpine
+    container_name: postgres
+    restart: always
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=123456
+      - POSTGRES_DB=simples_bank_db
+    ports:
+      - "5432:5432"
+  api:
+    container_name: simplebank-api
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    restart: always
+    environment:
+      - GIN_MODE=release
+      - DB_SOURCE=postgresql://postgres:123456@postgres:5432/simples_bank_db?sslmode=disable
+    depends_on:
+      - postgres
+    entrypoint: [ "/app/wait-for-it.sh", "postgres:5432", "--", "/app/start.sh" ]
+    command: [ "/app/main" ]
